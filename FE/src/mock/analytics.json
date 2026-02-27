@@ -1,0 +1,138 @@
+{
+    "kpis": {
+        "totalRepositories": 5,
+        "activeRepositories": 4,
+        "totalCommitsThisWeek": 47,
+        "openPullRequests": 4,
+        "criticalRiskItems": 2,
+        "averageHealthScore": 66,
+        "evaluationsCompleted": 24,
+        "averageQualityScore": 71
+    },
+    "commitActivity": [
+        {
+            "date": "2024-12-12",
+            "commits": 8,
+            "prs": 1
+        },
+        {
+            "date": "2024-12-13",
+            "commits": 12,
+            "prs": 2
+        },
+        {
+            "date": "2024-12-14",
+            "commits": 6,
+            "prs": 1
+        },
+        {
+            "date": "2024-12-15",
+            "commits": 15,
+            "prs": 3
+        },
+        {
+            "date": "2024-12-16",
+            "commits": 9,
+            "prs": 2
+        },
+        {
+            "date": "2024-12-17",
+            "commits": 11,
+            "prs": 1
+        },
+        {
+            "date": "2024-12-18",
+            "commits": 14,
+            "prs": 2
+        }
+    ],
+    "riskDistribution": [
+        {
+            "level": "critical",
+            "count": 2,
+            "color": "#EF4444"
+        },
+        {
+            "level": "high",
+            "count": 3,
+            "color": "#F97316"
+        },
+        {
+            "level": "medium",
+            "count": 7,
+            "color": "#EAB308"
+        },
+        {
+            "level": "low",
+            "count": 12,
+            "color": "#22C55E"
+        }
+    ],
+    "developerLeaderboard": [
+        {
+            "name": "Sarah Chen",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
+            "commits": 18,
+            "averageScore": 87,
+            "riskLevel": "low"
+        },
+        {
+            "name": "Aisha Okafor",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=aisha",
+            "commits": 14,
+            "averageScore": 82,
+            "riskLevel": "low"
+        },
+        {
+            "name": "Marcus Lee",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=marcus",
+            "commits": 11,
+            "averageScore": 74,
+            "riskLevel": "medium"
+        },
+        {
+            "name": "Priya Patel",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=priya",
+            "commits": 9,
+            "averageScore": 69,
+            "riskLevel": "medium"
+        },
+        {
+            "name": "Jake Wilson",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=jake",
+            "commits": 7,
+            "averageScore": 31,
+            "riskLevel": "critical"
+        }
+    ],
+    "healthScoreTrend": [
+        {
+            "date": "2024-12-12",
+            "score": 71
+        },
+        {
+            "date": "2024-12-13",
+            "score": 68
+        },
+        {
+            "date": "2024-12-14",
+            "score": 65
+        },
+        {
+            "date": "2024-12-15",
+            "score": 70
+        },
+        {
+            "date": "2024-12-16",
+            "score": 63
+        },
+        {
+            "date": "2024-12-17",
+            "score": 64
+        },
+        {
+            "date": "2024-12-18",
+            "score": 66
+        }
+    ]
+}

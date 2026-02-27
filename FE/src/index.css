@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap");
+
+@theme {
+  /* Background */
+  --color-bg-base: #F8FAFC;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-elevated: #F1F5F9;
+
+  /* Primary & Secondary (Slate based) */
+  --color-primary: #0F172A;
+  --color-secondary: #64748B;
+
+  /* Border */
+  --color-border-subtle: #F1F5F9;
+  --color-border-default: #E2E8F0;
+
+  /* Accent (A more vibrant blue for premium feel) */
+  --color-accent-blue: #2563EB;
+  --color-accent-light: #EFF6FF;
+
+  /* Risk (Softer for light mode) */
+  --color-risk-critical: #EF4444;
+  --color-risk-high: #F97316;
+  --color-risk-medium: #EAB308;
+  --color-risk-low: #22C55E;
+
+  /* Text */
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94A3B8;
+
+  /* Fonts */
+  --font-display: "Syne", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-body: "Inter", sans-serif;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Shadows */
+  --shadow-premium: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-card: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+}
+
+@layer base {
+
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+    border-color: var(--color-border-default);
+  }
+
+  html {
+    font-family: "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-primary);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Syne", sans-serif;
+    color: var(--color-text-primary);
+    font-weight: 700;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-base);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-default);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 4px 1px rgba(239, 68, 68, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 12px 4px rgba(239, 68, 68, 0.2);
+  }
+}
+
+@keyframes pulse-dot {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Premium Card hover effects */
+.hover-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}

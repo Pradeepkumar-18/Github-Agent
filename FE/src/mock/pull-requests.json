@@ -1,0 +1,148 @@
+{
+    "pullRequests": [
+        {
+            "id": "pr-001",
+            "prNumber": 247,
+            "title": "feat: implement distributed tracing with OpenTelemetry",
+            "body": "This PR adds full OpenTelemetry integration across all service boundaries.",
+            "authorName": "Sarah Chen",
+            "authorAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah",
+            "repositoryId": "repo-001",
+            "repositoryFullName": "acme-corp/api-gateway",
+            "baseBranch": "main",
+            "headBranch": "feat/otel-tracing",
+            "state": "open",
+            "riskLevel": "medium",
+            "riskScore": 52,
+            "additions": 1204,
+            "deletions": 89,
+            "changedFiles": 31,
+            "commitsCount": 8,
+            "evaluationStatus": "completed",
+            "evaluationId": "eval-005",
+            "mergedAt": null,
+            "githubCreatedAt": "2024-12-16T10:00:00Z",
+            "reviewers": [
+                "Marcus Lee",
+                "Jake Wilson"
+            ]
+        },
+        {
+            "id": "pr-002",
+            "prNumber": 93,
+            "title": "BREAKING: replace entire data pipeline with streaming architecture",
+            "body": "Major architectural overhaul replacing batch processing with Kafka streams.",
+            "authorName": "Jake Wilson",
+            "authorAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=jake",
+            "repositoryId": "repo-002",
+            "repositoryFullName": "acme-corp/ml-pipeline",
+            "baseBranch": "main",
+            "headBranch": "feat/kafka-streaming",
+            "state": "open",
+            "riskLevel": "critical",
+            "riskScore": 91,
+            "additions": 4821,
+            "deletions": 2341,
+            "changedFiles": 87,
+            "commitsCount": 23,
+            "evaluationStatus": "completed",
+            "evaluationId": "eval-006",
+            "mergedAt": null,
+            "githubCreatedAt": "2024-12-14T09:00:00Z",
+            "reviewers": [
+                "Priya Patel"
+            ]
+        },
+        {
+            "id": "pr-003",
+            "prNumber": 156,
+            "title": "fix: correct timezone handling in date picker component",
+            "body": "Fixes timezone offset issue when users in non-UTC zones create events.",
+            "authorName": "Aisha Okafor",
+            "authorAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=aisha",
+            "repositoryId": "repo-003",
+            "repositoryFullName": "acme-corp/frontend-dashboard",
+            "baseBranch": "develop",
+            "headBranch": "fix/timezone-datepicker",
+            "state": "open",
+            "riskLevel": "low",
+            "riskScore": 14,
+            "additions": 67,
+            "deletions": 41,
+            "changedFiles": 5,
+            "commitsCount": 2,
+            "evaluationStatus": "completed",
+            "evaluationId": "eval-007",
+            "mergedAt": null,
+            "githubCreatedAt": "2024-12-18T08:00:00Z",
+            "reviewers": [
+                "Sarah Chen"
+            ]
+        },
+        {
+            "id": "pr-004",
+            "prNumber": 78,
+            "title": "refactor: migrate JWT validation to centralized auth middleware",
+            "body": "Centralizes all JWT validation logic to eliminate duplication across 12 route handlers.",
+            "authorName": "Marcus Lee",
+            "authorAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=marcus",
+            "repositoryId": "repo-004",
+            "repositoryFullName": "acme-corp/auth-service",
+            "baseBranch": "main",
+            "headBranch": "refactor/centralize-jwt",
+            "state": "merged",
+            "riskLevel": "high",
+            "riskScore": 68,
+            "additions": 891,
+            "deletions": 634,
+            "changedFiles": 22,
+            "commitsCount": 6,
+            "evaluationStatus": "completed",
+            "evaluationId": "eval-008",
+            "mergedAt": "2024-12-15T16:30:00Z",
+            "githubCreatedAt": "2024-12-12T11:00:00Z",
+            "reviewers": [
+                "Sarah Chen",
+                "Priya Patel"
+            ]
+        },
+        {
+            "id": "pr-005",
+            "prNumber": 248,
+            "title": "docs: update API reference for v2 endpoints",
+            "body": "Updates all documentation strings and README sections for the new v2 API.",
+            "authorName": "Priya Patel",
+            "authorAvatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=priya",
+            "repositoryId": "repo-001",
+            "repositoryFullName": "acme-corp/api-gateway",
+            "baseBranch": "main",
+            "headBranch": "docs/v2-api-reference",
+            "state": "open",
+            "riskLevel": "low",
+            "riskScore": 8,
+            "additions": 234,
+            "deletions": 91,
+            "changedFiles": 9,
+            "commitsCount": 3,
+            "evaluationStatus": "pending",
+            "evaluationId": null,
+            "mergedAt": null,
+            "githubCreatedAt": "2024-12-18T13:00:00Z",
+            "reviewers": []
+        }
+    ],
+    "meta": {
+        "total": 5,
+        "byState": {
+            "open": 4,
+            "merged": 1,
+            "closed": 0
+        },
+        "byRisk": {
+            "critical": 1,
+            "high": 1,
+            "medium": 1,
+            "low": 2
+        }
+    }
+}

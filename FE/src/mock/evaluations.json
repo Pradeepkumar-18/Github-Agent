@@ -1,0 +1,212 @@
+{
+    "evaluations": [
+        {
+            "id": "eval-001",
+            "targetId": "a4f8c2d1e9b3f7a0c5d8e2f1b4c7d0a3e6f9c2d5",
+            "targetType": "commit",
+            "repositoryId": "repo-001",
+            "summary": "Well-structured implementation of Redis sliding window rate limiting. The approach correctly handles concurrent requests and provides accurate rate tracking. Minor concern around edge case when Redis is unreachable — a fallback strategy should be defined.",
+            "qualityScore": 84,
+            "securityScore": 91,
+            "maintainabilityScore": 78,
+            "overallScore": 84,
+            "riskLevel": "low",
+            "issues": [
+                "No fallback behavior when Redis is unavailable",
+                "Missing unit tests for edge case: requests at exact window boundary"
+            ],
+            "suggestions": [
+                "Add circuit breaker pattern for Redis connectivity failures",
+                "Consider extracting window size and limit to environment config",
+                "Add metrics emission for rate limit hits"
+            ],
+            "fileAnalysis": [
+                {
+                    "filename": "src/middleware/rate-limiter.ts",
+                    "risk": "low",
+                    "notes": "Core logic is clean and well-typed"
+                },
+                {
+                    "filename": "src/config/redis.config.ts",
+                    "risk": "low",
+                    "notes": "Hardcoded timeout values should be configurable"
+                },
+                {
+                    "filename": "tests/rate-limiter.spec.ts",
+                    "risk": "medium",
+                    "notes": "Missing boundary condition tests"
+                }
+            ],
+            "status": "completed",
+            "model": "gpt-4o",
+            "tokensUsed": 2841
+        },
+        {
+            "id": "eval-002",
+            "targetId": "b7d9e4a2f1c8b5e3d0a7f4c1b8e5d2a9f6c3b0e7",
+            "targetType": "commit",
+            "repositoryId": "repo-001",
+            "summary": "Effective fix for the connection pool memory leak. The root cause (missing connection release on error path) has been correctly identified and patched. The fix is minimal and targeted — good engineering discipline.",
+            "qualityScore": 91,
+            "securityScore": 88,
+            "maintainabilityScore": 85,
+            "overallScore": 88,
+            "riskLevel": "low",
+            "issues": [],
+            "suggestions": [
+                "Add integration test that simulates the error path to prevent regression"
+            ],
+            "fileAnalysis": [
+                {
+                    "filename": "src/db/connection-pool.ts",
+                    "risk": "low",
+                    "notes": "Fix is correct and minimal"
+                }
+            ],
+            "status": "completed",
+            "model": "gpt-4o",
+            "tokensUsed": 1204
+        },
+        {
+            "id": "eval-003",
+            "targetId": "d4a7f2e9c6b3d0a7e4c1b8f5d2a9c6b3f0e7d4a1",
+            "targetType": "commit",
+            "repositoryId": "repo-002",
+            "summary": "HIGH RISK: This commit removes 891 lines of v1 endpoint code without a deprecation period or migration guide. Downstream services that depend on v1 endpoints will break immediately upon deployment. This change should be reverted.",
+            "qualityScore": 12,
+            "securityScore": 40,
+            "maintainabilityScore": 8,
+            "overallScore": 18,
+            "riskLevel": "critical",
+            "issues": [
+                "No deprecation notice given to consumers of v1 endpoints",
+                "No migration documentation provided",
+                "Breaking change introduced without version bump",
+                "18 files deleted without corresponding updates to consumers",
+                "No rollback plan documented"
+            ],
+            "suggestions": [
+                "Revert this commit immediately",
+                "Create a proper deprecation timeline: announce → 30-day warning → remove",
+                "Provide migration guide for all v1 consumers",
+                "Use API versioning strategy instead of deletion"
+            ],
+            "fileAnalysis": [
+                {
+                    "filename": "api/v1/*",
+                    "risk": "critical",
+                    "notes": "All v1 routes deleted without warning"
+                }
+            ],
+            "status": "completed",
+            "model": "gpt-4o",
+            "tokensUsed": 3821
+        },
+        {
+            "id": "eval-004",
+            "targetId": "e8b1d4f7c2a5e8b1d4f7c2a5e8b1d4f7c2a5e8b1",
+            "targetType": "commit",
+            "repositoryId": "repo-003",
+            "summary": "Good refactoring of auth logic into composable hooks. The separation of concerns is well-executed. Logic is reusable and unit-testable.",
+            "qualityScore": 88,
+            "securityScore": 79,
+            "maintainabilityScore": 92,
+            "overallScore": 86,
+            "riskLevel": "low",
+            "issues": [
+                "No tests added for the new auth hooks"
+            ],
+            "suggestions": [
+                "Add unit tests for each exported hook"
+            ],
+            "fileAnalysis": [
+                {
+                    "filename": "src/hooks/useAuth.ts",
+                    "risk": "low",
+                    "notes": "Clean composable design"
+                }
+            ],
+            "status": "completed",
+            "model": "gpt-4o",
+            "tokensUsed": 1980
+        },
+        {
+            "id": "eval-005",
+            "targetId": "247",
+            "targetType": "pull_request",
+            "repositoryId": "repo-001",
+            "summary": "Solid OpenTelemetry integration with proper span propagation. Medium risk due to the number of files changed and cross-cutting nature of the change — careful staged rollout recommended.",
+            "qualityScore": 78,
+            "securityScore": 82,
+            "maintainabilityScore": 74,
+            "overallScore": 78,
+            "riskLevel": "medium",
+            "issues": [
+                "Jaeger exporter credentials are hardcoded in one file",
+                "Missing sampling rate configuration — defaults to 100%",
+                "No documentation on how to run Jaeger locally"
+            ],
+            "suggestions": [
+                "Move Jaeger credentials to environment variables",
+                "Add configurable sampling rate (recommend 10% in prod)",
+                "Add local development setup instructions to README"
+            ],
+            "fileAnalysis": [
+                {
+                    "filename": "src/telemetry/tracer.ts",
+                    "risk": "medium",
+                    "notes": "Hardcoded exporter config"
+                },
+                {
+                    "filename": "src/middleware/tracing.middleware.ts",
+                    "risk": "low",
+                    "notes": "Well implemented"
+                }
+            ],
+            "status": "completed",
+            "model": "gpt-4o",
+            "tokensUsed": 5241
+        },
+        {
+            "id": "eval-006",
+            "targetId": "93",
+            "targetType": "pull_request",
+            "repositoryId": "repo-002",
+            "summary": "CRITICAL: This PR represents a complete architectural replacement. 87 files changed, 4821 additions — this is too large to safely review or merge as a single unit. Requires phased migration strategy.",
+            "qualityScore": 54,
+            "securityScore": 48,
+            "maintainabilityScore": 41,
+            "overallScore": 48,
+            "riskLevel": "critical",
+            "issues": [
+                "PR size is too large — exceeds safe review threshold by 10x",
+                "No feature flag or parallel-run strategy included",
+                "Kafka consumer group configuration missing error handling",
+                "No load testing results provided",
+                "Dead letter queue (DLQ) not implemented",
+                "Schema registry integration incomplete"
+            ],
+            "suggestions": [
+                "Split into at least 5 smaller PRs with a dependency graph",
+                "Implement parallel-run mode with feature flag before cutover",
+                "Add DLQ for failed Kafka messages",
+                "Provide load test results"
+            ],
+            "fileAnalysis": [
+                {
+                    "filename": "src/kafka/producer.ts",
+                    "risk": "high",
+                    "notes": "Missing error handling on produce"
+                },
+                {
+                    "filename": "src/kafka/consumer.ts",
+                    "risk": "critical",
+                    "notes": "No DLQ, no retry logic"
+                }
+            ],
+            "status": "completed",
+            "model": "gpt-4o",
+            "tokensUsed": 8934
+        }
+    ]
+}
