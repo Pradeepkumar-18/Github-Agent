@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRepositories } from '../hooks/useRepositories';
+import { useToast } from '../context/ToastContext';
 import type { Repository } from '../types';
 import { languageColor, scoreColor, timeAgo } from '../utils/formatters';
 import { Search, GitCommit, MoreHorizontal, Plus, X, Loader2, AlertCircle } from 'lucide-react';
@@ -100,16 +101,21 @@ function AddRepoModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const { showToast } = useToast();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setLoading(true);
         try {
             await createRepository({ owner: owner.trim(), repo: repo.trim(), token: token.trim(), provider });
+            showToast(`Successfully connected ${owner}/${repo}`, 'success');
             onCreated();
             onClose();
         } catch (err: any) {
-            setError(err.message ?? 'Failed to create repository');
+            const msg = err.response?.data?.message || err.message || 'Failed to create repository';
+            setError(msg);
+            showToast(msg, 'error');
         } finally {
             setLoading(false);
         }

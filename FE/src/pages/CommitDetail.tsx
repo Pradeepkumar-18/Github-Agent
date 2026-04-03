@@ -1,10 +1,10 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useEvaluation } from '../hooks/useEvaluation';
 import { useCommit } from '../hooks/useCommits';
 import { Avatar } from '../components/ui/Avatar';
 import { StatusDot } from '../components/ui/StatusDot';
 import { formatDate, scoreColor } from '../utils/formatters';
-import { ChevronRight, GitBranch, FileText, Minus, CheckCircle, Lightbulb, AlertCircle, ShieldCheck, Cpu } from 'lucide-react';
+import { ChevronRight, GitBranch, FileText, Minus, CheckCircle, Lightbulb, AlertCircle, ShieldCheck, Cpu, ChevronLeft } from 'lucide-react';
 
 function ScoreBar({ label, score }: { label: string; score: number }) {
     const color = scoreColor(score);
@@ -41,15 +41,31 @@ export function CommitDetail() {
         <div className="flex flex-col items-center justify-center h-64 text-slate-300">
             <AlertCircle className="h-10 w-10 mb-4 opacity-20" />
             <p className="font-bold uppercase tracking-widest text-[10px]">{error ?? 'Commit not found'}</p>
-            <button onClick={() => navigate('/commits')} className="mt-4 text-xs text-blue-500 hover:underline">← Back to Commits</button>
+            <button onClick={() => navigate('/commits')} className="mt-4 text-xs text-blue-500 hover:underline font-bold uppercase tracking-widest">← Back to Commit Hub</button>
         </div>
     );
 
 
+
+
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start max-w-[1600px] mx-auto">
-            {/* Left: Commit Context */}
-            <div className="space-y-6">
+        <div className="space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
+            {/* Breadcrumbs */}
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                <Link to="/commits" className="hover:text-blue-500 transition-colors">Commits</Link>
+                <ChevronLeft className="h-3 w-3 rotate-180" />
+                <Link to={`/commits/repository/${commit.repositoryId}`} className="hover:text-blue-500 transition-colors">
+                    {commit.repositoryFullName.split('/').pop()}
+                </Link>
+                <ChevronLeft className="h-3 w-3 rotate-180" />
+                <span className="text-slate-900">Details</span>
+            </div>
+
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start">
+                {/* Left: Commit Context */}
+                <div className="space-y-6">
+
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-50 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
                         <ShieldCheck className="h-32 w-32" />
@@ -197,6 +213,9 @@ export function CommitDetail() {
                     </div>
                 )}
             </div>
+            </div>
         </div>
     );
 }
+
+

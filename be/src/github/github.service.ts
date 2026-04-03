@@ -14,8 +14,18 @@ export class GithubService implements GitProviderService {
         };
     }
 
-    private async request<T>(url: string, token: string): Promise<T> {
-        const response = await fetch(url, { headers: this.buildHeaders(token) });
+    private async request<T>(url: string, token: string, method: string = 'GET', body?: any): Promise<T> {
+        const options: RequestInit = {
+            method,
+            headers: this.buildHeaders(token),
+        };
+
+        if (body) {
+            options.body = JSON.stringify(body);
+            options.headers = { ...options.headers, 'Content-Type': 'application/json' };
+        }
+
+        const response = await fetch(url, options);
 
         if (response.status === 403) {
             const remaining = response.headers.get('x-ratelimit-remaining');
@@ -166,4 +176,81 @@ export class GithubService implements GitProviderService {
         this.logger.log(`GitHub: fetched ${allPRs.length} PRs from ${owner}/${repo}`);
         return allPRs;
     }
+
+    async fetchPullRequestFiles(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<import('../common/git-provider.interface').NormalizedFileChange[]> {
+        const url = `${this.baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}/files?per_page=100`;
+        const files = await this.request<any[]>(url, token);
+
+        return files.map(f => ({
+            filename: f.filename,
+            status: f.status as any,
+            additions: f.additions,
+            deletions: f.deletions,
+            patch: f.patch,
+        }));
+    }
+
+    async mergePullRequest(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+        commitMessage?: string,
+    ): Promise<{ sha: string; merged: boolean }> {
+        const url = `${this.baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}/merge`;
+        const body = commitMessage ? { commit_message: commitMessage } : {};
+        const result = await this.request<any>(url, token, 'PUT', body);
+
+        return {
+            sha: result.sha,
+            merged: result.merged,
+        };
+    }
+
+    async fetchPullRequestComments(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<import('../common/git-provider.interface').NormalizedPRComment[]> {
+        // GitHub PR comments are technically issue comments
+        const url = `${this.baseUrl}/repos/${owner}/${repo}/issues/${prNumber}/comments`;
+        const comments = await this.request<any[]>(url, token);
+
+        return comments.map(c => ({
+            authorName: c.user.login,
+            authorAvatar: c.user.avatar_url,
+            body: c.body,
+            createdAt: c.created_at,
+        }));
+    }
+
+    async addComment(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+        body: string,
+    ): Promise<void> {
+        const url = `${this.baseUrl}/repos/${owner}/${repo}/issues/${prNumber}/comments`;
+        await this.request<any>(url, token, 'POST', { body });
+    }
+
+    async closePullRequest(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<void> {
+        const url = `${this.baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}`;
+        await this.request<any>(url, token, 'PATCH', { state: 'closed' });
+    }
 }
+
+
+

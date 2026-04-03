@@ -47,9 +47,11 @@ export interface Commit {
 
 export interface PullRequest {
     id: string;
+    _id?: string;
     prNumber: number;
     title: string;
     body: string;
+
     authorName: string;
     authorAvatar: string;
     repositoryId: string;
@@ -69,6 +71,14 @@ export interface PullRequest {
     githubCreatedAt: string;
     reviewers: string[];
 }
+
+export interface PRComment {
+    authorName: string;
+    authorAvatar: string;
+    body: string;
+    createdAt: string;
+}
+
 
 export interface FileAnalysis {
     filename: string;

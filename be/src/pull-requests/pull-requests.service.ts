@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { PullRequest, PullRequestDocument } from '../database/schemas/pull-request.schema';
@@ -37,6 +37,15 @@ export class PullRequestsService {
             const result = await this.prModel.updateOne(
                 { prNumber: pr.prNumber, repositoryId: repoObjectId },
                 {
+                    $set: {
+                        state: pr.state,
+                        mergedAt: pr.mergedAt ? new Date(pr.mergedAt) : null,
+                        additions: pr.additions,
+                        deletions: pr.deletions,
+                        changedFiles: pr.changedFiles,
+                        commitsCount: pr.commitsCount,
+                        reviewers: pr.reviewers,
+                    },
                     $setOnInsert: {
                         prNumber: pr.prNumber,
                         title: pr.title,
@@ -47,19 +56,13 @@ export class PullRequestsService {
                         repositoryFullName: fullName,
                         baseBranch: pr.baseBranch,
                         headBranch: pr.headBranch,
-                        state: pr.state,
                         riskLevel: 'low',
                         riskScore: 0,
-                        additions: pr.additions,
-                        deletions: pr.deletions,
-                        changedFiles: pr.changedFiles,
-                        commitsCount: pr.commitsCount,
                         evaluationStatus: 'pending',
-                        mergedAt: pr.mergedAt ? new Date(pr.mergedAt) : null,
                         githubCreatedAt: new Date(pr.createdAt),
-                        reviewers: pr.reviewers,
                     },
                 },
+
                 { upsert: true },
             );
 
@@ -103,4 +106,77 @@ export class PullRequestsService {
         if (!pr) throw new NotFoundException(`Pull request / merge request #${prNumber} not found`);
         return pr as any;
     }
+
+    async findById(id: string): Promise<PullRequestDocument> {
+        const pr = await this.prModel.findById(id).lean().exec();
+        if (!pr) throw new NotFoundException(`Pull request / merge request not found`);
+        return pr as any;
+    }
+
+    async getFiles(id: string): Promise<import('../common/git-provider.interface').NormalizedFileChange[]> {
+        const pr = await this.findById(id);
+        const { owner, repo, token, providerService } =
+            await this.repositoriesService.getProviderConfig(pr.repositoryId.toString());
+
+        return providerService.fetchPullRequestFiles(owner, repo, token, pr.prNumber);
+    }
+
+    async merge(id: string, commitMessage?: string): Promise<{ success: boolean; sha: string }> {
+        const pr = await this.findById(id);
+        if (pr.state !== 'open') {
+            throw new HttpException(`Cannot merge a pull request in '${pr.state}' state`, HttpStatus.BAD_REQUEST);
+        }
+
+        const { owner, repo, token, providerService } =
+            await this.repositoriesService.getProviderConfig(pr.repositoryId.toString());
+
+        const result = await providerService.mergePullRequest(owner, repo, token, pr.prNumber, commitMessage);
+
+
+        if (result.merged) {
+            await this.prModel.findByIdAndUpdate(id, {
+                state: 'merged',
+                mergedAt: new Date().toISOString(),
+            });
+        }
+
+        return { success: result.merged, sha: result.sha };
+    }
+
+    async getComments(id: string): Promise<import('../common/git-provider.interface').NormalizedPRComment[]> {
+        const pr = await this.findById(id);
+        const { owner, repo, token, providerService } =
+            await this.repositoriesService.getProviderConfig(pr.repositoryId.toString());
+
+        return providerService.fetchPullRequestComments(owner, repo, token, pr.prNumber);
+    }
+
+    async addComment(id: string, body: string): Promise<void> {
+        const pr = await this.findById(id);
+        const { owner, repo, token, providerService } =
+            await this.repositoriesService.getProviderConfig(pr.repositoryId.toString());
+
+        await providerService.addComment(owner, repo, token, pr.prNumber, body);
+    }
+
+    async close(id: string, reason?: string): Promise<void> {
+        const pr = await this.findById(id);
+        const { owner, repo, token, providerService } =
+            await this.repositoriesService.getProviderConfig(pr.repositoryId.toString());
+
+        if (reason) {
+            await providerService.addComment(owner, repo, token, pr.prNumber, reason);
+        }
+
+        await providerService.closePullRequest(owner, repo, token, pr.prNumber);
+
+        // Update local status
+        await this.prModel.findByIdAndUpdate(id, {
+            state: 'closed',
+        });
+    }
 }
+
+
+
+

@@ -70,3 +70,32 @@ export function usePullRequests(repositoryId?: string) {
         fetchFromGitHub,
     };
 }
+
+export function usePullRequest(id: string) {
+    const [pullRequest, setPullRequest] = useState<PullRequest | null>(null);
+    const [files, setFiles] = useState<import('../api/pullRequests.api').NormalizedFileChange[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [filesLoading, setFilesLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!id) return;
+        setLoading(true);
+        setError(null);
+        pullRequestsApi.getById(id)
+            .then(setPullRequest)
+            .catch((err: any) => setError(err.message ?? 'Failed to load pull request'))
+            .finally(() => setLoading(false));
+
+        setFilesLoading(true);
+        pullRequestsApi.getFiles(id)
+            .then(setFiles)
+            .catch(() => { /* error optional for files */ })
+            .finally(() => setFilesLoading(false));
+    }, [id]);
+
+    return { pullRequest, files, loading, filesLoading, error };
+}
+
+
+

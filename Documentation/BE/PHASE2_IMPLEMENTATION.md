@@ -8,15 +8,13 @@ Phase 2 replaces all mock data with real API integration. Repositories can be co
 
 ## What Was Built
 
-| Area | Changes |
-|---|---|
-| **Provider Abstraction** | Shared `GitProviderService` interface — both providers implement the same methods |
-| **GitHub Integration** | `GithubService` — GitHub REST API v3, token auth, pagination, rate-limit detection |
-| **GitLab Integration** | `GitlabService` — GitLab REST API v4, `PRIVATE-TOKEN` auth, MR mapping, pagination |
-| **Repository Management** | Create, list, verify repos; store encrypted PAT; route to correct provider |
-| **Commits** | Fetch by date range, upsert to MongoDB, paginated listing |
 | **Pull Requests** | Fetch MRs/PRs by date range, upsert to MongoDB, state/risk filtering |
 | **PAT Encryption** | AES-256-GCM encryption for all stored tokens |
+| **Verify & Merge** | Write-back action to formally merge PRs/MRs from the dashboard |
+| **Discussion Threads** | Fetch existing team comments and post new architectural decisions |
+| **Decline & Close** | Formal PR termination workflow with automated closing rationales |
+| **Premium UI** | Syntax highlighting (Prism.js), Markdown rendering, and custom Modals/Toasts |
+
 
 ---
 
@@ -61,17 +59,26 @@ be/src/
 
 Both `GithubService` and `GitlabService` implement `GitProviderService`:
 
-```ts
 interface GitProviderService {
   validateRepository(owner, repo, token): Promise<RepoMetadata>
   fetchCommitsByDateRange(owner, repo, token, since, until): Promise<NormalizedCommit[]>
   fetchPullRequestsByDateRange(owner, repo, token, since, until): Promise<NormalizedPullRequest[]>
+  fetchPullRequestFiles(owner, repo, token, prNumber): Promise<NormalizedFileChange[]>
+  mergePullRequest(owner, repo, token, prNumber, message?): Promise<{sha, merged}>
+  fetchPullRequestComments(owner, repo, token, prNumber): Promise<NormalizedPRComment[]>
+  addComment(owner, repo, token, prNumber, body): Promise<void>
+  closePullRequest(owner, repo, token, prNumber): Promise<void>
 }
 ```
+
+**`NormalizedPRComment`** fields: `authorName`, `authorAvatar`, `body`, `createdAt`
+
 
 **`NormalizedCommit`** fields: `sha`, `message`, `authorName`, `authorEmail`, `authorAvatar`, `url`, `committedAt`, `additions`, `deletions`, `changedFiles`
 
 **`NormalizedPullRequest`** fields: `prNumber`, `title`, `body`, `authorName`, `authorAvatar`, `baseBranch`, `headBranch`, `state`, `additions`, `deletions`, `changedFiles`, `commitsCount`, `mergedAt`, `createdAt`, `reviewers`
+
+**`NormalizedFileChange`** fields: `filename`, `status`, `additions`, `deletions`, `patch` (diff string)
 
 ---
 
@@ -156,11 +163,15 @@ decrypt(ciphertext: string, key: string): string  // used at fetch time
 
 ### Pull Requests
 
-| Method | Endpoint | Description |
-|---|---|---|
 | `POST` | `/api/v1/pull-requests/fetch` | Trigger GitHub/GitLab fetch for a date range |
 | `GET` | `/api/v1/pull-requests` | List stored PRs/MRs |
-| `GET` | `/api/v1/pull-requests/:prNumber` | Get a single PR/MR |
+| `GET` | `/api/v1/pull-requests/:id` | Get a single PR/MR by unique MongoDB ID |
+| `POST` | `/api/v1/pull-requests/:id/merge` | Formally merge the PR on the provider |
+| `POST` | `/api/v1/pull-requests/:id/close` | Formally close the PR (optionally with a reason) |
+| `GET` | `/api/v1/pull-requests/:id/comments` | Fetch live discussion thread from provider |
+| `POST` | `/api/v1/pull-requests/:id/comments` | Post a new comment to the PR thread |
+| `GET` | `/api/v1/pull-requests/:id/files` | Get the list of changed files and their diffs (patches) |
+
 
 **POST `/api/v1/pull-requests/fetch` — Request body:**
 ```json
@@ -247,13 +258,30 @@ Unique index added: `{ owner, repo, provider }`
 
 ---
 
-## Known Limitations (Phase 2)
+## UI Features (Actionable Integration)
 
-- GitLab commits do not return **additions/deletions** at the list level — only available via individual commit diff API (avoided to reduce API calls)
-- GitLab MRs do not expose **additions/deletions** directly — `changes_count` is available as a string
-- `changedFiles` for commits defaults to `0` for GitLab (requires separate diffs call)
-- All commits are stored with `evaluationStatus: 'pending'` — AI evaluation is Phase 3
+### 🎨 Premium Aesthetics
+- **Syntax Highlighting**: Uses `Prism.js` with "Tomorrow Night" theme for code diffs. Supports TS, JS, PY, GO, JSON.
+- **Rich Markdown**: PR descriptions and discussion threads rendered with `react-markdown` and `Tailwind Typography`.
+- **Reusable Component Layer**:
+    - `Modal.tsx`: High-fidelity confirmation dialogs with glassmorphism backdrops.
+    - `Toast.tsx`: Non-blocking success/error notifications.
+    - `PRDiscussion.tsx`: Threaded conversation viewer for architectural review.
+
+### ⚡ Architectural Actions
+- **ID-Based Routing**: All URLs use unique MongoDB object IDs (e.g., `/pull-requests/67abc...`) instead of numeric PR numbers. This prevents collisions across multiple repositories.
+- **Decline Workflow**: Closing a PR via the dashboard requires (or encourages) a "Closing Reason," which is automatically posted as a final comment on the PR.
+- **Optimistic Sync**: When a PR is merged or closed, the local database state is updated immediately to reflect the new reality without requiring a full re-fetch.
 
 ---
 
-*Last updated: February 2026 — Phase 2 Live Integration*
+## Known Limitations (Phase 2+)
+
+- GitLab commits still do not return **additions/deletions** at the list level.
+- AI automated risk scoring is still pending (scheduled for **Phase 3**).
+- Webhooks are not yet implemented; state changes made outside the dashboard require a "Fetch" to synchronize.
+
+---
+
+*Last updated: April 2026 — Phase 2 Actionable Integration*
+

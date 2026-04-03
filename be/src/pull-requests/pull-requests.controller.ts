@@ -22,9 +22,46 @@ export class PullRequestsController {
         return this.pullRequestsService.findAll(repositoryId, search);
     }
 
-    /** GET /api/v1/pull-requests/:number */
-    @Get(':number')
-    findOne(@Param('number', ParseIntPipe) prNumber: number) {
-        return this.pullRequestsService.findByNumber(prNumber);
+    /** GET /api/v1/pull-requests/:id/files */
+    @Get(':id/files')
+    getFiles(@Param('id') id: string) {
+        return this.pullRequestsService.getFiles(id);
+    }
+
+    /** GET /api/v1/pull-requests/:id */
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.pullRequestsService.findById(id);
+    }
+
+    @Post(':id/merge')
+    @HttpCode(HttpStatus.OK)
+    merge(@Param('id') id: string, @Body('commitMessage') commitMessage?: string) {
+        return this.pullRequestsService.merge(id, commitMessage);
+    }
+
+
+    /** GET /api/v1/pull-requests/:id/comments */
+    @Get(':id/comments')
+    getComments(@Param('id') id: string) {
+        return this.pullRequestsService.getComments(id);
+    }
+
+    /** POST /api/v1/pull-requests/:id/comments */
+    @Post(':id/comments')
+    @HttpCode(HttpStatus.CREATED)
+    addComment(@Param('id') id: string, @Body('body') body: string) {
+        return this.pullRequestsService.addComment(id, body);
+    }
+
+    /** POST /api/v1/pull-requests/:id/close */
+    @Post(':id/close')
+    @HttpCode(HttpStatus.OK)
+    close(@Param('id') id: string, @Body('reason') reason?: string) {
+        return this.pullRequestsService.close(id, reason);
     }
 }
+
+
+
+

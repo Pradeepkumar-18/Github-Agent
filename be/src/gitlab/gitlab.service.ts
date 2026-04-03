@@ -18,8 +18,17 @@ export class GitlabService implements GitProviderService {
         return encodeURIComponent(`${owner}/${repo}`);
     }
 
-    private async request<T>(url: string, token: string): Promise<T> {
-        const response = await fetch(url, { headers: this.buildHeaders(token) });
+    private async request<T>(url: string, token: string, method: string = 'GET', body?: any): Promise<T> {
+        const options: RequestInit = {
+            method,
+            headers: this.buildHeaders(token),
+        };
+
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(url, options);
 
         if (response.status === 429) {
             const retryAfter = response.headers.get('retry-after') ?? 'unknown';
@@ -163,4 +172,89 @@ export class GitlabService implements GitProviderService {
         this.logger.log(`GitLab: fetched ${allMRs.length} MRs from ${owner}/${repo}`);
         return allMRs;
     }
+
+    async fetchPullRequestFiles(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<import('../common/git-provider.interface').NormalizedFileChange[]> {
+        const path = this.encodePath(owner, repo);
+        const url = `${this.baseUrl}/projects/${path}/merge_requests/${prNumber}/diffs?per_page=100`;
+        const diffs = await this.request<any[]>(url, token);
+
+        return diffs.map(d => ({
+            filename: d.new_path,
+            status: d.new_file ? 'added' : d.deleted_file ? 'removed' : 'modified',
+            additions: 0, // GitLab requires parsing the diff string for these
+            deletions: 0,
+            patch: d.diff,
+        }));
+    }
+
+    async mergePullRequest(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+        commitMessage?: string,
+    ): Promise<{ sha: string; merged: boolean }> {
+        const path = this.encodePath(owner, repo);
+        const url = `${this.baseUrl}/projects/${path}/merge_requests/${prNumber}/merge`;
+        const body = commitMessage ? { merge_commit_message: commitMessage } : {};
+        const result = await this.request<any>(url, token, 'PUT', body);
+
+        return {
+            sha: result.merge_commit_sha || result.sha,
+            merged: result.state === 'merged',
+        };
+    }
+
+    async fetchPullRequestComments(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<import('../common/git-provider.interface').NormalizedPRComment[]> {
+        const path = this.encodePath(owner, repo);
+        // GitLab MR comments are notes
+        const url = `${this.baseUrl}/projects/${path}/merge_requests/${prNumber}/notes?sort=asc&per_page=100`;
+        const notes = await this.request<any[]>(url, token);
+
+        // Filter for human comments (system notes are usually for state changes)
+        return notes
+            .filter(n => !n.system)
+            .map(n => ({
+                authorName: n.author.username,
+                authorAvatar: n.author.avatar_url,
+                body: n.body,
+                createdAt: n.created_at,
+            }));
+    }
+
+    async addComment(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+        body: string,
+    ): Promise<void> {
+        const path = this.encodePath(owner, repo);
+        const url = `${this.baseUrl}/projects/${path}/merge_requests/${prNumber}/notes`;
+        await this.request<any>(url, token, 'POST', { body });
+    }
+
+    async closePullRequest(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<void> {
+        const path = this.encodePath(owner, repo);
+        const url = `${this.baseUrl}/projects/${path}/merge_requests/${prNumber}`;
+        await this.request<any>(url, token, 'PUT', { state_event: 'close' });
+    }
 }
+
+
+

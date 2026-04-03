@@ -37,6 +37,27 @@ export interface NormalizedPullRequest {
 }
 
 /**
+ * Normalized file change shape for code diffs.
+ */
+export interface NormalizedFileChange {
+    filename: string;
+    status: 'added' | 'modified' | 'removed' | 'renamed' | 'copied';
+    additions: number;
+    deletions: number;
+    patch?: string; // The diff content
+}
+
+/**
+ * Normalized pull request comment shape.
+ */
+export interface NormalizedPRComment {
+    authorName: string;
+    authorAvatar: string;
+    body: string;
+    createdAt: string;
+}
+
+/**
  * Common interface that both GithubService and GitlabService implement.
  */
 export interface GitProviderService {
@@ -68,4 +89,59 @@ export interface GitProviderService {
         since: string,
         until: string,
     ): Promise<NormalizedPullRequest[]>;
+
+    /**
+     * Fetch the list of files changed in a specific PR/MR.
+     */
+    fetchPullRequestFiles(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<NormalizedFileChange[]>;
+
+    /**
+     * Merge the PR/MR in the Git provider.
+     */
+    mergePullRequest(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+        commitMessage?: string,
+    ): Promise<{ sha: string; merged: boolean }>;
+
+    /**
+     * Fetch all comments for a specific PR/MR.
+     */
+    fetchPullRequestComments(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<NormalizedPRComment[]>;
+
+    /**
+     * Add a comment to the PR/MR thread.
+     */
+    addComment(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+        body: string,
+    ): Promise<void>;
+
+    /**
+     * Close the PR/MR without merging.
+     */
+    closePullRequest(
+        owner: string,
+        repo: string,
+        token: string,
+        prNumber: number,
+    ): Promise<void>;
 }
+
+
+
