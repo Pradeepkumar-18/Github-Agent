@@ -1,6 +1,6 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEvaluation } from '../hooks/useEvaluation';
-import { useCommits } from '../hooks/useCommits';
+import { useCommit } from '../hooks/useCommits';
 import { Avatar } from '../components/ui/Avatar';
 import { StatusDot } from '../components/ui/StatusDot';
 import { formatDate, scoreColor } from '../utils/formatters';
@@ -25,17 +25,26 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
 }
 
 export function CommitDetail() {
-    const { sha } = useParams();
-    const { commits } = useCommits();
-    const commit = commits.find((c) => c.sha === sha);
+    const { sha } = useParams<{ sha: string }>();
+    const navigate = useNavigate();
+    const { commit, loading, error } = useCommit(sha ?? '');
     const { evaluation } = useEvaluation(commit?.id ?? null);
 
-    if (!commit || !evaluation) return (
-        <div className="flex flex-col items-center justify-center h-full text-slate-300">
-            <Cpu className="h-12 w-12 mb-4 opacity-10 animate-pulse" />
-            <p className="font-bold uppercase tracking-widest text-[10px]">Analyzing commit metadata...</p>
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-300">
+            <Cpu className="h-10 w-10 mb-4 opacity-20 animate-pulse" />
+            <p className="font-bold uppercase tracking-widest text-[10px]">Loading commit…</p>
         </div>
     );
+
+    if (error || !commit) return (
+        <div className="flex flex-col items-center justify-center h-64 text-slate-300">
+            <AlertCircle className="h-10 w-10 mb-4 opacity-20" />
+            <p className="font-bold uppercase tracking-widest text-[10px]">{error ?? 'Commit not found'}</p>
+            <button onClick={() => navigate('/commits')} className="mt-4 text-xs text-blue-500 hover:underline">← Back to Commits</button>
+        </div>
+    );
+
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full items-start max-w-[1600px] mx-auto">
@@ -106,76 +115,87 @@ export function CommitDetail() {
 
             {/* Right: AI Evaluation */}
             <div className="space-y-6 lg:sticky lg:top-8">
-                <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 border-t-4 border-t-blue-600 relative overflow-hidden">
-                    <div className="absolute top-4 right-4 animate-pulse">
-                        <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100">Live Intel</span>
-                    </div>
-                    <h2 className="text-lg font-bold text-slate-900 mb-8 tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>
-                        Code Intelligence Report
-                    </h2>
+                {evaluation ? (
+                    <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-100 border-t-4 border-t-blue-600 relative overflow-hidden">
+                        <div className="absolute top-4 right-4 animate-pulse">
+                            <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest border border-blue-100">Live Intel</span>
+                        </div>
+                        <h2 className="text-lg font-bold text-slate-900 mb-8 tracking-tight" style={{ fontFamily: 'Syne, sans-serif' }}>
+                            Code Intelligence Report
+                        </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
-                        <div className="flex items-center justify-center p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
-                            <div className="relative flex items-center justify-center h-28 w-28">
-                                <svg className="h-full w-full -rotate-90">
-                                    <circle cx="56" cy="56" r="48" fill="transparent" stroke="#E2E8F0" strokeWidth="8" />
-                                    <circle
-                                        cx="56"
-                                        cy="56"
-                                        r="48"
-                                        fill="transparent"
-                                        stroke={scoreColor(evaluation.overallScore)}
-                                        strokeWidth="8"
-                                        strokeDasharray={301.6}
-                                        strokeDashoffset={301.6 - (evaluation.overallScore / 100) * 301.6}
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
-                                <div className="absolute flex flex-col items-center">
-                                    <span className="text-2xl font-black text-slate-800">{evaluation.overallScore}</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
+                            <div className="flex items-center justify-center p-6 bg-slate-50 rounded-3xl border border-slate-100 shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)]">
+                                <div className="relative flex items-center justify-center h-28 w-28">
+                                    <svg className="h-full w-full -rotate-90">
+                                        <circle cx="56" cy="56" r="48" fill="transparent" stroke="#E2E8F0" strokeWidth="8" />
+                                        <circle
+                                            cx="56" cy="56" r="48" fill="transparent"
+                                            stroke={scoreColor(evaluation.overallScore)}
+                                            strokeWidth="8"
+                                            strokeDasharray={301.6}
+                                            strokeDashoffset={301.6 - (evaluation.overallScore / 100) * 301.6}
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                    <div className="absolute flex flex-col items-center">
+                                        <span className="text-2xl font-black text-slate-800">{evaluation.overallScore}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="space-y-5">
+                                <ScoreBar label="Security" score={evaluation.securityScore} />
+                                <ScoreBar label="Maintainability" score={evaluation.maintainabilityScore} />
+                                <ScoreBar label="Quality" score={evaluation.qualityScore} />
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                    <AlertCircle className="h-3.5 w-3.5" /> Issues Detected
+                                </p>
+                                <div className="space-y-2">
+                                    {evaluation.issues.map((issue, idx) => (
+                                        <div key={idx} className="flex gap-3 p-4 bg-red-50/50 rounded-2xl border border-red-100/30 transition-all hover:bg-red-50">
+                                            <Minus className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+                                            <p className="text-xs font-bold text-red-900 leading-tight">{issue}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="space-y-3 pt-2">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                    <Lightbulb className="h-3.5 w-3.5" /> Suggestions
+                                </p>
+                                <div className="space-y-2">
+                                    {evaluation.suggestions.map((sug, idx) => (
+                                        <div key={idx} className="flex gap-3 p-4 bg-green-50/50 rounded-2xl border border-green-100/30 transition-all hover:bg-green-50">
+                                            <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                            <p className="text-xs font-bold text-green-900 leading-relaxed">{sug}</p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
-
-                        <div className="space-y-5">
-                            <ScoreBar label="Security" score={evaluation.securityScore} />
-                            <ScoreBar label="Maintainability" score={evaluation.maintainabilityScore} />
-                            <ScoreBar label="Quality" score={evaluation.qualityScore} />
-                        </div>
                     </div>
-
-                    <div className="space-y-6">
-                        <div className="space-y-3">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                <AlertCircle className="h-3.5 w-3.5" /> Issues Detected
-                            </p>
-                            <div className="space-y-2">
-                                {evaluation.issues.map((issue, idx) => (
-                                    <div key={idx} className="flex gap-3 p-4 bg-red-50/50 rounded-2xl border border-red-100/30 transition-all hover:bg-red-50">
-                                        <Minus className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-xs font-bold text-red-900 leading-tight">{issue}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                ) : (
+                    /* Phase 3 pending state */
+                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 border-t-4 border-t-slate-200 flex flex-col items-center justify-center text-center gap-4 min-h-[320px]">
+                        <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center">
+                            <Cpu className="h-8 w-8 text-slate-300 animate-pulse" />
                         </div>
-
-                        <div className="space-y-3 pt-2">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                <Lightbulb className="h-3.5 w-3.5" /> Suggestions
+                        <div>
+                            <p className="text-sm font-bold text-slate-500">AI Evaluation Pending</p>
+                            <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
+                                Code intelligence analysis will be available in Phase 3 when the AI evaluation engine is active.
                             </p>
-                            <div className="space-y-2">
-                                {evaluation.suggestions.map((sug, idx) => (
-                                    <div key={idx} className="flex gap-3 p-4 bg-green-50/50 rounded-2xl border border-green-100/30 transition-all hover:bg-green-50">
-                                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                                        <p className="text-xs font-bold text-green-900 leading-relaxed">{sug}</p>
-                                    </div>
-                                ))}
-                            </div>
                         </div>
+                        <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-100 uppercase tracking-widest">
+                            Status: {commit.evaluationStatus}
+                        </span>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

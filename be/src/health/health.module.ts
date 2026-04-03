@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
-import { QueueModule } from '../queue/queue.module';
+// QueueModule removed — Redis not required until Phase 3
 
 @Module({
-    imports: [TerminusModule, QueueModule],
+    imports: [TerminusModule],
     controllers: [HealthController],
 })
 export class HealthModule { }

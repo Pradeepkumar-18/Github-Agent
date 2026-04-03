@@ -28,4 +28,6 @@ export default () => ({
     jwt: {
         secret: process.env.JWT_SECRET || 'dev_secret',
     },
+
+    encryptionKey: process.env.ENCRYPTION_KEY || 'dev_encryption_key_32_chars_min!!',
 });

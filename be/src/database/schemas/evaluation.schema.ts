@@ -66,7 +66,7 @@ export class Evaluation {
     @Prop({ default: 0 })
     tokensUsed: number;
 
-    @Prop({ default: null })
+    @Prop({ type: String, default: null })
     failureReason: string | null;
 }
 

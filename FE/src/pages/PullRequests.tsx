@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { usePullRequests } from '../hooks/usePullRequests';
+import { useRepositories } from '../hooks/useRepositories';
 import { RiskBadge } from '../components/ui/RiskBadge';
 import { Avatar } from '../components/ui/Avatar';
 import type { RiskLevel } from '../types';
 import { timeAgo, riskColor } from '../utils/formatters';
-import { AlertTriangle, ListFilter, ArrowUpRight } from 'lucide-react';
+import { AlertTriangle, ListFilter, ArrowUpRight, RefreshCw, AlertCircle, GitPullRequest, Search } from 'lucide-react';
+
+const today = new Date().toISOString().slice(0, 10);
+const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 const STATE_BADGE: Record<string, { color: string; bg: string; label: string }> = {
     open: { color: '#22C55E', bg: '#F0FDF4', label: 'Open' },
@@ -12,11 +17,86 @@ const STATE_BADGE: Record<string, { color: string; bg: string; label: string }> 
 };
 
 export function PullRequests() {
-    const { pullRequests, stateFilter, setStateFilter, riskFilter, setRiskFilter } = usePullRequests();
+    const [selectedRepoId, setSelectedRepoId] = useState('');
+    const [since, setSince] = useState(sixMonthsAgo);
+    const [until, setUntil] = useState(today);
+    const [fetchResult, setFetchResult] = useState<{ fetched: number; upserted: number } | null>(null);
+
+    const { pullRequests, search, setSearch, stateFilter, setStateFilter, riskFilter, setRiskFilter, fetchLoading, error, fetchFromGitHub } =
+        usePullRequests(selectedRepoId || undefined);
+
+    const { repositories } = useRepositories();
+    const selectedRepo = repositories.find(r => (r._id ?? r.id) === selectedRepoId);
+    const isGitlab = selectedRepo?.provider === 'gitlab';
+
+    const handleFetch = async () => {
+        if (!selectedRepoId) return;
+        try {
+            const res = await fetchFromGitHub({
+                repositoryId: selectedRepoId,
+                since: new Date(since).toISOString(),
+                until: new Date(until + 'T23:59:59').toISOString(),
+            });
+            setFetchResult(res);
+        } catch { /* error shown via hook */ }
+    };
 
     return (
-        <div className="space-y-8 max-w-[1600px] mx-auto">
-            {/* Top Controls */}
+        <div className="space-y-6 max-w-[1600px] mx-auto">
+
+            {/* ── Fetch Panel ─────────────────────────────── */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                    Import pull requests / merge requests from {isGitlab ? 'GitLab' : 'GitHub'}
+                </p>
+                <div className="flex flex-wrap gap-3 items-end">
+                    <div className="flex flex-col gap-1 min-w-[200px]">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Repository</label>
+                        <select
+                            value={selectedRepoId}
+                            onChange={(e) => { setSelectedRepoId(e.target.value); setFetchResult(null); }}
+                            className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm font-medium bg-white outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-slate-700"
+                        >
+                            <option value="">— Select a repository —</option>
+                            {repositories.map(r => (
+                                <option key={String(r._id ?? r.id)} value={String(r._id ?? r.id)}>
+                                    {r.fullName} {r.provider === 'gitlab' ? '🦊' : '🐙'}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Since</label>
+                        <input type="date" value={since} onChange={(e) => setSince(e.target.value)} max={until}
+                            className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm font-medium bg-white outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-slate-700" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Until</label>
+                        <input type="date" value={until} onChange={(e) => setUntil(e.target.value)} min={since} max={today}
+                            className="px-3 py-2.5 border border-slate-200 rounded-xl text-sm font-medium bg-white outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 text-slate-700" />
+                    </div>
+                    <button
+                        onClick={handleFetch}
+                        disabled={!selectedRepoId || fetchLoading}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isGitlab ? 'bg-orange-500 hover:bg-orange-600' : 'bg-blue-600 hover:bg-blue-700'}`}
+                    >
+                        <RefreshCw className={`h-4 w-4 ${fetchLoading ? 'animate-spin' : ''}`} />
+                        {fetchLoading ? 'Fetching…' : `Fetch from ${isGitlab ? 'GitLab' : 'GitHub'}`}
+                    </button>
+                </div>
+                {fetchResult && (
+                    <div className="mt-4 flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2.5">
+                        <GitPullRequest className="h-4 w-4" />
+                        Fetched <strong>{fetchResult.fetched}</strong> PRs/MRs — <strong>{fetchResult.upserted}</strong> new stored.
+                    </div>
+                )}
+                {error && (
+                    <div className="mt-4 flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-2.5">
+                        <AlertCircle className="h-4 w-4" />{error}
+                    </div>
+                )}
+            </div>
+
             <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white p-4 rounded-3xl shadow-sm border border-slate-50">
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
@@ -60,8 +140,22 @@ export function PullRequests() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-                {/* Main List */}
                 <div className="lg:col-span-3 space-y-4">
+                    {/* Search Input */}
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder={`Search in ${pullRequests.length} pull requests...`}
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="block w-full pl-11 pr-4 py-4 bg-white border border-slate-100 rounded-3xl text-sm font-medium shadow-sm transition-all outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-400 placeholder:text-slate-400"
+                        />
+                    </div>
+
+                    {/* Main List */}
                     {pullRequests.map((pr) => {
                         const badge = STATE_BADGE[pr.state];
                         const rColor = riskColor(pr.riskLevel);

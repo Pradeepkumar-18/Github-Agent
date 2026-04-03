@@ -16,20 +16,27 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
-  // CORS — open for Phase 1, lock down in Phase 8
+  // CORS — open for Phase 1/2, lock down in Phase 8
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+    ],
     credentials: true,
   });
 
   // Validation
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     whitelist: true,
+  //     forbidNonWhitelisted: true,
+  //     transform: true,
+  //   }),
+  // );
 
   // Global prefix
   app.setGlobalPrefix('api/v1');

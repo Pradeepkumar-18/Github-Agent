@@ -54,18 +54,43 @@ Retrieve current job counts for background evaluation queues.
 
 ---
 
-## Planned API Groups (Phase 2+)
+---
 
-The following endpoint categories are scheduled for implementation:
+## Repositories
 
-### Repositories (`/repositories`)
-- `GET /`: List monitored repositories.
-- `GET /:id`: Detailed repository stats.
-- `POST /`: Add a new repository to monitor.
+| Method | Path | Body | Description |
+|---|---|---|---|
+| `POST` | `/repositories` | `{ owner, repo, token }` | Register repo, validate with GitHub, encrypt PAT |
+| `GET` | `/repositories` | — | List all configured repositories (no tokens) |
+| `GET` | `/repositories/:id` | — | Get a single repository by Mongo `_id` |
+
+---
+
+## Commits
+
+| Method | Path | Body / Query | Description |
+|---|---|---|---|
+| `POST` | `/commits/fetch` | `{ repositoryId, since, until }` | Fetch from GitHub + upsert to MongoDB |
+| `GET` | `/commits` | `?repositoryId=&page=1&limit=20&search=` | Paginated commit list (optional search) |
+| `GET` | `/commits/:sha` | — | Single commit by SHA (prefix match) |
+
+---
+
+## Pull Requests
+
+| Method | Path | Body / Query | Description |
+|---|---|---|---|
+| `POST` | `/pull-requests/fetch` | `{ repositoryId, since, until }` | Fetch from GitHub + upsert to MongoDB |
+| `GET` | `/pull-requests` | `?repositoryId=&search=` | List all PRs for a repository (optional search) |
+| `GET` | `/pull-requests/:number` | — | Single PR by GitHub PR number |
+
+---
+
+## Planned (Phase 3+)
 
 ### Evaluations (`/evaluations`)
-- `GET /commits/:sha`: Get AI evaluation for a specific commit.
-- `GET /pull-requests/:id`: Get risk assessment for a PR.
+- `GET /commits/:sha` — AI evaluation for a commit
+- `GET /pull-requests/:number` — Risk assessment for a PR
 
 ### Settings (`/settings`)
-- `PATCH /capabilities`: Toggle system AI capabilities.
+- `PATCH /capabilities` — Toggle AI capabilities

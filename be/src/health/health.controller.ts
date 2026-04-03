@@ -5,9 +5,6 @@ import {
     MongooseHealthIndicator,
     MemoryHealthIndicator,
 } from '@nestjs/terminus';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { QUEUES } from '../queue/queue.constants';
 
 @Controller('health')
 export class HealthController {
@@ -15,7 +12,7 @@ export class HealthController {
         private health: HealthCheckService,
         private mongoose: MongooseHealthIndicator,
         private memory: MemoryHealthIndicator,
-        @InjectQueue(QUEUES.COMMIT_EVALUATION) private commitQueue: Queue,
+        // @InjectQueue removed — Redis/BullMQ not required until Phase 3
     ) { }
 
     @Get()
@@ -27,14 +24,5 @@ export class HealthController {
         ]);
     }
 
-    @Get('queues')
-    async checkQueues() {
-        const counts = await this.commitQueue.getJobCounts();
-        return {
-            status: 'ok',
-            queues: {
-                commitEvaluation: counts,
-            },
-        };
-    }
+    // /health/queues endpoint removed — requires Redis (Phase 3)
 }

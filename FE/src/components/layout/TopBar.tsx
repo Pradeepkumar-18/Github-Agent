@@ -1,5 +1,5 @@
 import { Bell, Search } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 
 const PAGE_TITLES: Record<string, string> = {
     '/': 'Analytics Overview',
@@ -9,11 +9,28 @@ const PAGE_TITLES: Record<string, string> = {
     '/settings': 'System Settings',
 };
 
+/** Convert a URL segment to a readable label */
+function humanize(segment: string): string {
+    // SHA hash (long hex string) — truncate
+    if (/^[0-9a-f]{7,}$/i.test(segment)) return segment.slice(0, 7).toUpperCase();
+    // Replace hyphens/underscores, capitalize each word
+    return segment
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function TopBar() {
     const { pathname } = useLocation();
     const segments = pathname.split('/').filter(Boolean);
     const base = '/' + (segments[0] ?? '');
     const title = PAGE_TITLES[base] ?? 'Detailed View';
+
+    // Build breadcrumb items with their full path
+    const crumbs = segments.map((seg, idx) => ({
+        label: humanize(seg),
+        path: '/' + segments.slice(0, idx + 1).join('/'),
+        isLast: idx === segments.length - 1,
+    }));
 
     return (
         <header
@@ -22,24 +39,24 @@ export function TopBar() {
         >
             {/* Title / Breadcrumb */}
             <div className="flex-1">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#94A3B8' }}>
-                    <span>CodeIntel</span>
-                    {segments.length > 0 && (
-                        <>
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#94A3B8' }}>
+                    <Link to="/" className="hover:text-blue-500 transition-colors">CodeIntel</Link>
+                    {crumbs.map((crumb) => (
+                        <span key={crumb.path} className="flex items-center gap-1.5">
                             <span className="opacity-30">/</span>
-                            {segments.map((s, idx) => (
-                                <span key={idx} className={idx === segments.length - 1 ? 'text-blue-600' : ''}>
-                                    {s}
-                                    {idx < segments.length - 1 && <span className="mx-2 opacity-30">/</span>}
-                                </span>
-                            ))}
-                        </>
-                    )}
+                            {crumb.isLast ? (
+                                <span className="text-blue-600">{crumb.label}</span>
+                            ) : (
+                                <Link to={crumb.path} className="hover:text-blue-500 transition-colors">{crumb.label}</Link>
+                            )}
+                        </span>
+                    ))}
                 </div>
                 <h1 className="text-xl font-bold tracking-tight" style={{ color: '#0F172A', fontFamily: 'Syne, sans-serif' }}>
                     {title}
                 </h1>
             </div>
+
 
             {/* Center Search Placeholder (Premium touch) */}
             <div className="hidden lg:flex flex-1 max-w-md mx-8 relative group">

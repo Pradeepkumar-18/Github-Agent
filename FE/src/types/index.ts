@@ -5,9 +5,13 @@ export type RepoStatus = 'active' | 'inactive' | 'archived';
 
 export interface Repository {
     id: string;
+    _id?: string;                       // Mongoose returns _id
     name: string;
     fullName: string;
-    githubId: number;
+    githubId: number;                   // also used for GitLab project ID
+    provider: 'github' | 'gitlab';      // NEW in Phase 2
+    owner: string;                      // NEW in Phase 2
+    repo: string;                       // NEW in Phase 2
     description: string;
     language: string;
     defaultBranch: string;

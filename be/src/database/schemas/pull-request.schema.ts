@@ -71,7 +71,7 @@ export class PullRequest {
     @Prop({ type: Types.ObjectId, ref: 'Evaluation', default: null })
     evaluationId: Types.ObjectId | null;
 
-    @Prop({ default: null })
+    @Prop({ type: Date, default: null })
     mergedAt: Date | null;
 
     @Prop({ required: true })

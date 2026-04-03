@@ -14,6 +14,22 @@ export class Repository {
     @Prop({ required: true, unique: true })
     githubId: number;
 
+    /** Which git provider this repository belongs to */
+    @Prop({ type: String, enum: ['github', 'gitlab'], default: 'github' })
+    provider: 'github' | 'gitlab';
+
+    /** GitHub / GitLab repository owner (username or org) */
+    @Prop({ required: true, trim: true })
+    owner: string;
+
+    /** GitHub repository short name (without owner prefix) */
+    @Prop({ required: true, trim: true })
+    repo: string;
+
+    /** AES-256 encrypted Personal Access Token — never exposed in API responses */
+    @Prop({ type: String, select: false, default: null })
+    encryptedToken: string | null;
+
     @Prop({ default: '' })
     description: string;
 
@@ -47,5 +63,5 @@ export class Repository {
 }
 
 export const RepositorySchema = SchemaFactory.createForClass(Repository);
-RepositorySchema.index({ fullName: 1 });
-RepositorySchema.index({ githubId: 1 }, { unique: true });
+// fullName and githubId indexes are created automatically via unique:true on @Prop
+RepositorySchema.index({ owner: 1, repo: 1 }, { unique: true });

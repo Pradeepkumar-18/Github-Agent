@@ -28,4 +28,8 @@ export class ConfigService {
     get aiConfig() {
         return this.config.get('ai');
     }
+
+    get encryptionKey(): string {
+        return this.config.get<string>('encryptionKey') ?? 'dev_encryption_key_32_chars_min!!';
+    }
 }
